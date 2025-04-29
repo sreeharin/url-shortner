@@ -1,25 +1,39 @@
 package main
 
 import (
-	"fmt"
+	"net/http"
 
+	"github.com/gin-gonic/gin"
 	"github.com/jxskiss/base62"
 )
 
-func convertURL(original string) string {
+func convertURL(original string) URL {
+	var converted URL
+	converted.Original = original
+
 	LIMIT := 6
 	encoded := base62.EncodeToString([]byte(original))
+
 	if len(encoded) > LIMIT {
-		return encoded[len(encoded)-LIMIT:]
+		converted.Shortened = encoded[len(encoded)-LIMIT:]
+	} else {
+		converted.Shortened = encoded
 	}
 
-	return encoded
+	return converted
+}
+
+func handler(c *gin.Context) {
+	url := c.Query("url")
+	if url == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"message": "URL is missing"})
+		return
+	}
+	c.JSON(http.StatusOK, convertURL(url))
 }
 
 func main() {
-	var url string
-	fmt.Println("Enter the URL to shorten:")
-	fmt.Scanln(&url)
-
-	fmt.Println(convertURL(url))
+	router := gin.Default()
+	router.GET("/", handler)
+	router.Run()
 }

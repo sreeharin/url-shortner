@@ -1,6 +1,6 @@
 package main
 
 type URL struct {
-	Original  string
-	Shortened string
+	Original  string `json:"original"`
+	Shortened string `json:"shortened"`
 }
