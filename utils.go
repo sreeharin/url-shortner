@@ -2,6 +2,7 @@ package main
 
 import "github.com/jxskiss/base62"
 
+// convertURL takes a string and converts it to base62 format.
 func convertURL(original string) URL {
 	var converted URL
 	converted.Original = original
