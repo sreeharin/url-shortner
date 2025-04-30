@@ -1,0 +1,9 @@
+services:
+  db:
+    image: postgres:latest
+
+  web:
+    build: .
+    command: ./url-shortner
+    ports:
+      - "8080:8080"
