@@ -18,7 +18,7 @@ type handler struct {
 // handleFormInput handles the form input from the client.
 // It expects a JSON body with a "url" field.
 // It converts the URL to a shortened version and inserts it into the database.
-func (h handler) handleFormInput(c *gin.Context) {
+func (h *handler) handleFormInput(c *gin.Context) {
 	var input formInput
 	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "url is missing"})
@@ -32,15 +32,23 @@ func (h handler) handleFormInput(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, converted)
+	c.JSON(http.StatusCreated, converted)
 }
 
-func (h handler) handleQuery(c *gin.Context) {
+// handleQuery handles the query for a shortened URL.
+// It expects a query parameter "url" and returns the original URL if found.
+func (h *handler) handleQuery(c *gin.Context) {
 	url := c.Query("url")
 	if url == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "url is missing"})
 		return
 	}
 
-	c.JSON(http.StatusOK, url)
+	var urlDB UrlDB
+	if err := h.db.Where("shortened = ?", url).First(&urlDB).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "url not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"original": urlDB.Original})
 }

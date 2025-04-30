@@ -5,9 +5,17 @@ services:
       POSTGRES_USER: user
       POSTGRES_PASSWORD: password
       POSTGRES_DB: mydb
+    healthcheck:
+      test: ["CMD", "pg_isready", "-d", "mydb", "-U", "user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   web:
     build: .
     command: ./url-shortner
     ports:
       - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
