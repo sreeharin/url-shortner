@@ -18,7 +18,7 @@ func main() {
 
 	db.AutoMigrate(&UrlDB{})
 
-	handler := handler{db: db}
+	handler := Handler{db: db}
 
 	router := gin.Default()
 	router.POST("/", handler.handleFormInput)
