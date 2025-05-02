@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/gin-gonic/gin"
@@ -28,7 +29,7 @@ func setupTestEnvironment() (*gin.Engine, *gorm.DB, Handler) {
 func TestHandleFormInput(t *testing.T) {
 	router, db, handler := setupTestEnvironment()
 
-	convertedURL := convertURL("http://example.com")
+	convertedURL := convertURL("example.com")
 	exampleInput := formInput{Url: convertedURL.Original}
 	inputJson, _ := json.Marshal(exampleInput)
 
@@ -76,6 +77,10 @@ func TestHandleFormInput(t *testing.T) {
 				t.Errorf("Expected shortened URL in DB: %s, got: %s", convertedURL.Shortened, urlDB.Shortened)
 			}
 
+			if !strings.HasPrefix(urlDB.Original, "http://") {
+				t.Errorf("Expected original URL to start with http://, got: %s", urlDB.Original)
+			}
+
 		}
 	})
 
@@ -88,7 +93,7 @@ func TestHandleQuery(t *testing.T) {
 	router, db, handler := setupTestEnvironment()
 
 	router.GET("/", handler.handleQuery)
-	convertedURL := convertURL("http://example.com")
+	convertedURL := convertURL("example.com")
 	insertData(db, convertedURL)
 
 	t.Run("TestHandleQueryValid", func(t *testing.T) {

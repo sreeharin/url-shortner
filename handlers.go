@@ -50,6 +50,5 @@ func (h *Handler) handleQuery(c *gin.Context) {
 		return
 	}
 
-	// c.JSON(http.StatusOK, gin.H{"original": urlDB.Original})
 	c.Redirect(http.StatusMovedPermanently, urlDB.Original)
 }
