@@ -4,10 +4,12 @@ import (
 	"log"
 
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 
 	"github.com/sreeharin/url-shortner/internal/handlers"
+	"github.com/sreeharin/url-shortner/internal/middleware"
 	"github.com/sreeharin/url-shortner/internal/models"
 )
 
@@ -22,9 +24,15 @@ func main() {
 	db.AutoMigrate(&models.UrlDB{})
 
 	handler := handlers.Handler{DB: db}
+	logger, _ := zap.NewProduction()
+	defer logger.Sync()
 
-	router := gin.Default()
+	router := gin.New()
+	router.Use(gin.Recovery())
+	router.Use(middleware.Logger(logger))
+
 	router.POST("/", handler.HandleFormInput)
-	router.GET("/", handler.HandleQuery)
+	router.GET("/:url", handler.HandleParam)
+
 	router.Run()
 }

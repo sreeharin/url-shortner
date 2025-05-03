@@ -19,7 +19,7 @@ type Handler struct {
 	DB *gorm.DB
 }
 
-// handleFormInput handles the form input from the client.
+// HandleFormInput handles the form input from the client.
 // It expects a JSON body with a "url" field.
 // It converts the URL to a shortened version and inserts it into the database.
 func (h *Handler) HandleFormInput(c *gin.Context) {
@@ -39,10 +39,10 @@ func (h *Handler) HandleFormInput(c *gin.Context) {
 	c.JSON(http.StatusCreated, converted)
 }
 
-// handleQuery handles the query for a shortened URL.
+// HandleParam handles the query for a shortened URL.
 // It expects a query parameter "url" and returns the original URL if found.
-func (h *Handler) HandleQuery(c *gin.Context) {
-	url := c.Query("url")
+func (h *Handler) HandleParam(c *gin.Context) {
+	url := c.Param("url")
 	if url == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "url is missing"})
 		return

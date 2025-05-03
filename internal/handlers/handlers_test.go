@@ -10,16 +10,21 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
 	"github.com/sreeharin/url-shortner/internal/db"
+	"github.com/sreeharin/url-shortner/internal/middleware"
 	"github.com/sreeharin/url-shortner/internal/models"
 	"github.com/sreeharin/url-shortner/internal/utils"
 )
 
 func setupTestEnvironment() (*gin.Engine, *gorm.DB, Handler) {
 	router := gin.Default()
+	logger, _ := zap.NewProduction()
+	defer logger.Sync()
+	router.Use(middleware.Logger(logger))
 	DB, _ := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
 	DB.AutoMigrate(&models.UrlDB{})
 	handler := Handler{DB: DB}
@@ -90,19 +95,19 @@ func TestHandleFormInput(t *testing.T) {
 
 }
 
-// TestHandleQuery tests the handleQuery function.
+// TestHandleParam tests the handleQuery function.
 // It checks if the function correctly handles a valid query and returns the expected response.
 // It also verifies the user is redirected to the original URL.
-func TestHandleQuery(t *testing.T) {
+func TestHandleParam(t *testing.T) {
 	router, DB, handler := setupTestEnvironment()
 
-	router.GET("/", handler.HandleQuery)
+	router.GET("/:url", handler.HandleParam)
 	convertedURL := utils.ConvertURL("example.com")
 	db.InsertData(DB, convertedURL)
 
-	t.Run("TestHandleQueryValid", func(t *testing.T) {
+	t.Run("TestHandleParamValid", func(t *testing.T) {
 		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("GET", fmt.Sprintf("/?url=%s", convertedURL.Shortened), nil)
+		req, _ := http.NewRequest("GET", fmt.Sprintf("/%s", convertedURL.Shortened), nil)
 
 		router.ServeHTTP(w, req)
 
@@ -117,7 +122,7 @@ func TestHandleQuery(t *testing.T) {
 
 	t.Run("TestHandleQueryNotFound", func(t *testing.T) {
 		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("GET", "/?url=notfound.com", nil)
+		req, _ := http.NewRequest("GET", "/notfound.com", nil)
 
 		router.ServeHTTP(w, req)
 
