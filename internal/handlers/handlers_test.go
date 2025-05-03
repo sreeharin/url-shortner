@@ -1,4 +1,4 @@
-package main
+package handlers
 
 import (
 	"bytes"
@@ -12,28 +12,32 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
+
+	"github.com/sreeharin/url-shortner/internal/db"
+	"github.com/sreeharin/url-shortner/internal/models"
+	"github.com/sreeharin/url-shortner/internal/utils"
 )
 
 func setupTestEnvironment() (*gin.Engine, *gorm.DB, Handler) {
 	router := gin.Default()
-	db, _ := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
-	db.AutoMigrate(&UrlDB{})
-	handler := Handler{db: db}
+	DB, _ := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
+	DB.AutoMigrate(&models.UrlDB{})
+	handler := Handler{DB: DB}
 
-	return router, db, handler
+	return router, DB, handler
 }
 
 // TestHandleFormInput tests the handleFormInput function.
 // It checks if the function correctly handles a valid input and returns the expected response.
 // It also verifies that the data is correctly inserted into the database.
 func TestHandleFormInput(t *testing.T) {
-	router, db, handler := setupTestEnvironment()
+	router, DB, handler := setupTestEnvironment()
 
-	convertedURL := convertURL("example.com")
+	convertedURL := utils.ConvertURL("example.com")
 	exampleInput := formInput{Url: convertedURL.Original}
 	inputJson, _ := json.Marshal(exampleInput)
 
-	router.POST("/", handler.handleFormInput)
+	router.POST("/", handler.HandleFormInput)
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("POST", "/", bytes.NewBuffer(inputJson))
 
@@ -43,7 +47,7 @@ func TestHandleFormInput(t *testing.T) {
 		t.Errorf("Expected status code: %d, got: %d", http.StatusCreated, w.Code)
 	}
 
-	var url URL
+	var url models.URL
 	json.Unmarshal(w.Body.Bytes(), &url)
 
 	t.Run("TestHandleFormInputValid", func(t *testing.T) {
@@ -58,8 +62,8 @@ func TestHandleFormInput(t *testing.T) {
 	})
 
 	t.Run("TestDBInsertion", func(t *testing.T) {
-		var urlDB UrlDB
-		res := db.First(&urlDB)
+		var urlDB models.UrlDB
+		res := DB.First(&urlDB)
 
 		if res.Error != nil {
 			if res.Error != gorm.ErrRecordNotFound {
@@ -90,11 +94,11 @@ func TestHandleFormInput(t *testing.T) {
 // It checks if the function correctly handles a valid query and returns the expected response.
 // It also verifies the user is redirected to the original URL.
 func TestHandleQuery(t *testing.T) {
-	router, db, handler := setupTestEnvironment()
+	router, DB, handler := setupTestEnvironment()
 
-	router.GET("/", handler.handleQuery)
-	convertedURL := convertURL("example.com")
-	insertData(db, convertedURL)
+	router.GET("/", handler.HandleQuery)
+	convertedURL := utils.ConvertURL("example.com")
+	db.InsertData(DB, convertedURL)
 
 	t.Run("TestHandleQueryValid", func(t *testing.T) {
 		w := httptest.NewRecorder()
