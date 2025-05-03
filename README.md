@@ -5,7 +5,7 @@
 - [x] Save URL to database
 - [x] Redirect to original URL from shortened code
 - [x] Unit testing
-- [ ] Logging
+- [x] Logging
 - [ ] Authentication
 - [ ] Analytics using Grafana
 - [ ] Deploy using K8s
