@@ -5,10 +5,9 @@ WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
 
-COPY *.go .
+COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o /url-shortner
-
+RUN CGO_ENABLED=0 GOOS=linux go build -o /url-shortner ./cmd/url-shortner
 
 FROM alpine:latest
 
