@@ -49,8 +49,8 @@ func TestShortenURL(t *testing.T) {
 		var urlDB models.URL
 		DB.First(&urlDB)
 
-		if urlDB.Original != url.Original {
-			t.Errorf("Expected original URL in DB: %s, got: %s", url.Original, urlDB.Original)
+		if urlDB.Original != convertedURL.Original {
+			t.Errorf("Expected original URL in DB: %s, got: %s", convertedURL.Original, urlDB.Original)
 		}
 
 		if urlDB.Shortened != convertedURL.Shortened {
