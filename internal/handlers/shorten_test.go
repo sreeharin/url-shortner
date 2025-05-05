@@ -9,8 +9,6 @@ import (
 	"strings"
 	"testing"
 
-	"gorm.io/gorm"
-
 	"github.com/sreeharin/url-shortner/internal/models"
 	"github.com/sreeharin/url-shortner/internal/utils"
 )
@@ -48,30 +46,21 @@ func TestShortenURL(t *testing.T) {
 	})
 
 	t.Run("TestDBInsertion", func(t *testing.T) {
-		var url models.URL
-		res := DB.First(&url)
+		var urlDB models.URL
+		DB.First(&urlDB)
 
-		if res.Error != nil {
-			if res.Error != gorm.ErrRecordNotFound {
-				t.Errorf("No record found in DB: %v", res.Error)
-			} else {
-				t.Error(res.Error)
-			}
-		} else {
-
-			if url.Original != url.Original {
-				t.Errorf("Expected original URL in DB: %s, got: %s", url.Original, url.Original)
-			}
-
-			if url.Shortened != convertedURL.Shortened {
-				t.Errorf("Expected shortened URL in DB: %s, got: %s", convertedURL.Shortened, url.Shortened)
-			}
-
-			if !strings.HasPrefix(url.Original, "http://") {
-				t.Errorf("Expected original URL to start with http://, got: %s", url.Original)
-			}
-
+		if urlDB.Original != url.Original {
+			t.Errorf("Expected original URL in DB: %s, got: %s", url.Original, urlDB.Original)
 		}
+
+		if urlDB.Shortened != convertedURL.Shortened {
+			t.Errorf("Expected shortened URL in DB: %s, got: %s", convertedURL.Shortened, urlDB.Shortened)
+	}
+
+		if !strings.HasPrefix(urlDB.Original, "http://") {
+			t.Errorf("Expected original URL to start with http://, got: %s", urlDB.Original)
+		}
+
 	})
 
 }
