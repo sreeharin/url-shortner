@@ -3,13 +3,9 @@ package models
 import "gorm.io/gorm"
 
 type URL struct {
-	Original  string `json:"original"`
-	Shortened string `json:"shortened"`
-}
-
-type UrlDB struct {
-	ID uint `gorm:"primaryKey"`
-	URL
+	*gorm.Model `json:"-"`
+	Original    string `json:"original"`
+	Shortened   string `json:"shortened"`
 }
 
 type User struct {

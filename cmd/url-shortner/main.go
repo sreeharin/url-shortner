@@ -21,7 +21,8 @@ func main() {
 		log.Fatal(err)
 	}
 
-	db.AutoMigrate(&models.UrlDB{})
+	db.AutoMigrate(&models.URL{})
+	db.AutoMigrate(&models.User{})
 
 	handler := handlers.Handler{DB: db}
 	logger, _ := zap.NewProduction()
@@ -31,8 +32,8 @@ func main() {
 	router.Use(gin.Recovery())
 	router.Use(middleware.Logger(logger))
 
-	router.POST("/", handler.HandleFormInput)
-	router.GET("/:url", handler.HandleParam)
+	router.POST("/", handler.ShortenURL)
+	router.GET("/:url", handler.RedirectURL)
 
 	router.Run()
 }

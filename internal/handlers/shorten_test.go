@@ -9,40 +9,21 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 
-	"github.com/sreeharin/url-shortner/internal/db"
-	"github.com/sreeharin/url-shortner/internal/middleware"
 	"github.com/sreeharin/url-shortner/internal/models"
 	"github.com/sreeharin/url-shortner/internal/utils"
 )
 
-func setupTestEnvironment() (*gin.Engine, *gorm.DB, Handler) {
-	router := gin.Default()
-	logger, _ := zap.NewProduction()
-	defer logger.Sync()
-	router.Use(middleware.Logger(logger))
-	DB, _ := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
-	DB.AutoMigrate(&models.UrlDB{})
+func TestShortenURL(t *testing.T) {
+	router, DB := SetupTestEnvironment(t)
 	handler := Handler{DB: DB}
-
-	return router, DB, handler
-}
-
-// TestHandleFormInput tests the handleFormInput function.
-// It checks if the function correctly handles a valid input and returns the expected response.
-// It also verifies that the data is correctly inserted into the database.
-func TestHandleFormInput(t *testing.T) {
-	router, DB, handler := setupTestEnvironment()
 
 	convertedURL := utils.ConvertURL("example.com")
 	exampleInput := formInput{Url: convertedURL.Original}
 	inputJson, _ := json.Marshal(exampleInput)
 
-	router.POST("/", handler.HandleFormInput)
+	router.POST("/", handler.ShortenURL)
 	w := httptest.NewRecorder()
 	req, _ := http.NewRequest("POST", "/", bytes.NewBuffer(inputJson))
 
@@ -67,8 +48,8 @@ func TestHandleFormInput(t *testing.T) {
 	})
 
 	t.Run("TestDBInsertion", func(t *testing.T) {
-		var urlDB models.UrlDB
-		res := DB.First(&urlDB)
+		var url models.URL
+		res := DB.First(&url)
 
 		if res.Error != nil {
 			if res.Error != gorm.ErrRecordNotFound {
@@ -78,16 +59,16 @@ func TestHandleFormInput(t *testing.T) {
 			}
 		} else {
 
-			if urlDB.Original != url.Original {
-				t.Errorf("Expected original URL in DB: %s, got: %s", url.Original, urlDB.Original)
+			if url.Original != url.Original {
+				t.Errorf("Expected original URL in DB: %s, got: %s", url.Original, url.Original)
 			}
 
-			if urlDB.Shortened != convertedURL.Shortened {
-				t.Errorf("Expected shortened URL in DB: %s, got: %s", convertedURL.Shortened, urlDB.Shortened)
+			if url.Shortened != convertedURL.Shortened {
+				t.Errorf("Expected shortened URL in DB: %s, got: %s", convertedURL.Shortened, url.Shortened)
 			}
 
-			if !strings.HasPrefix(urlDB.Original, "http://") {
-				t.Errorf("Expected original URL to start with http://, got: %s", urlDB.Original)
+			if !strings.HasPrefix(url.Original, "http://") {
+				t.Errorf("Expected original URL to start with http://, got: %s", url.Original)
 			}
 
 		}
@@ -95,17 +76,16 @@ func TestHandleFormInput(t *testing.T) {
 
 }
 
-// TestHandleParam tests the handleQuery function.
-// It checks if the function correctly handles a valid query and returns the expected response.
-// It also verifies the user is redirected to the original URL.
-func TestHandleParam(t *testing.T) {
-	router, DB, handler := setupTestEnvironment()
+func TestRedirectURL(t *testing.T) {
+	router, DB := SetupTestEnvironment(t)
+	handler := Handler{DB: DB}
 
-	router.GET("/:url", handler.HandleParam)
+	router.GET("/:url", handler.RedirectURL)
 	convertedURL := utils.ConvertURL("example.com")
-	db.InsertData(DB, convertedURL)
 
-	t.Run("TestHandleParamValid", func(t *testing.T) {
+	DB.Create(&convertedURL)
+
+	t.Run("TestParamValid", func(t *testing.T) {
 		w := httptest.NewRecorder()
 		req, _ := http.NewRequest("GET", fmt.Sprintf("/%s", convertedURL.Shortened), nil)
 
@@ -120,7 +100,7 @@ func TestHandleParam(t *testing.T) {
 		}
 	})
 
-	t.Run("TestHandleQueryNotFound", func(t *testing.T) {
+	t.Run("TestQueryNotFound", func(t *testing.T) {
 		w := httptest.NewRecorder()
 		req, _ := http.NewRequest("GET", "/notfound.com", nil)
 

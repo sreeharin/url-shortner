@@ -4,9 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 
-	"github.com/sreeharin/url-shortner/internal/db"
 	"github.com/sreeharin/url-shortner/internal/models"
 	"github.com/sreeharin/url-shortner/internal/utils"
 )
@@ -15,23 +13,19 @@ type formInput struct {
 	Url string `json:"url" binding:"required"`
 }
 
-type Handler struct {
-	DB *gorm.DB
-}
-
-// HandleFormInput handles the form input from the client.
-// It expects a JSON body with a "url" field.
-// It converts the URL to a shortened version and inserts it into the database.
-func (h *Handler) HandleFormInput(c *gin.Context) {
+// ShortenURL handles the URL shortening process.
+// It expects a JSON payload with the original URL.
+// It converts the original URL to a shortened version and stores it in the database.
+func (h *Handler) ShortenURL(c *gin.Context) {
 	var input formInput
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "url is missing"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	converted := utils.ConvertURL(input.Url)
 
-	if err := db.InsertData(h.DB, converted); err != nil {
+	if err := h.DB.Create(&converted).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to insert data"})
 		return
 	}
@@ -39,16 +33,16 @@ func (h *Handler) HandleFormInput(c *gin.Context) {
 	c.JSON(http.StatusCreated, converted)
 }
 
-// HandleParam handles the query for a shortened URL.
-// It expects a query parameter "url" and returns the original URL if found.
-func (h *Handler) HandleParam(c *gin.Context) {
+// RedirectURL handles the redirection from the shortened URL to the original URL.
+// It expects the shortened URL as a URL parameter.
+func (h *Handler) RedirectURL(c *gin.Context) {
 	url := c.Param("url")
 	if url == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "url is missing"})
 		return
 	}
 
-	var urlDB models.UrlDB
+	var urlDB models.URL
 	if err := h.DB.Where("shortened = ?", url).First(&urlDB).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "url not found"})
 		return
