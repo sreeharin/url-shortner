@@ -21,8 +21,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	db.AutoMigrate(&models.URL{})
-	db.AutoMigrate(&models.User{})
+	db.AutoMigrate(&models.URL{}, &models.User{})
 
 	handler := handlers.Handler{DB: db}
 	logger, _ := zap.NewProduction()
