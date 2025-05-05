@@ -16,6 +16,7 @@ func SetupTestEnvironment(t *testing.T) (router *gin.Engine, db *gorm.DB) {
 	router = setupRouter()
 	db = setupDB()
 	db.AutoMigrate(&models.UrlDB{})
+	db.AutoMigrate(&models.User{})
 
 	return
 }
