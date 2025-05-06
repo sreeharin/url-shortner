@@ -30,6 +30,7 @@ func main() {
 	router := gin.New()
 	router.Use(gin.Recovery())
 	router.Use(middleware.Logger(logger))
+	router.Use(middleware.Auth())
 
 	router.POST("/", handler.ShortenURL)
 	router.GET("/:url", handler.RedirectURL)
