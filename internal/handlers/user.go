@@ -54,8 +54,11 @@ func (h *Handler) Login(c *gin.Context) {
 		return
 	}
 
-	claims := &jwt.RegisteredClaims{
-		ExpiresAt: jwt.NewNumericDate(time.Now().Add(5 * time.Minute)),
+	claims := models.CustomClaim{
+		User: userDB.ID,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(5 * time.Minute)),
+		},
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
