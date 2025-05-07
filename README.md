@@ -6,6 +6,6 @@
 - [x] Redirect to original URL from shortened code
 - [x] Unit testing
 - [x] Logging
-- [ ] Authentication
+- [x] Authentication
 - [ ] Analytics using Grafana
 - [ ] Deploy using K8s
