@@ -19,14 +19,14 @@ type formInput struct {
 func (h *Handler) ShortenURL(c *gin.Context) {
 	var input formInput
 	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Malformed form data"})
 		return
 	}
 
 	converted := utils.ConvertURL(input.Url)
 
 	if err := h.DB.Create(&converted).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to insert data"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to insert data"})
 		return
 	}
 
@@ -38,13 +38,13 @@ func (h *Handler) ShortenURL(c *gin.Context) {
 func (h *Handler) RedirectURL(c *gin.Context) {
 	url := c.Param("url")
 	if url == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "url is missing"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Url is missing"})
 		return
 	}
 
 	var urlDB models.URL
 	if err := h.DB.Where("shortened = ?", url).First(&urlDB).Error; err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "url not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "Url not found"})
 		return
 	}
 
