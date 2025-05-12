@@ -19,3 +19,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+
+  prometheus:
+    image: prom/prometheus
+    ports:
+      - 9090:9090
