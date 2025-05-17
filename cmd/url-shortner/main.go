@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
@@ -35,6 +36,8 @@ func main() {
 	router.GET("/:url", handler.RedirectURL)
 	router.POST("/login", handler.Login)
 	router.POST("/register", handler.Registration)
+
+	router.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
 	router.Run()
 }
