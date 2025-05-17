@@ -2,9 +2,11 @@ package handlers
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/sreeharin/url-shortner/internal/metrics"
 	"github.com/sreeharin/url-shortner/internal/models"
 	"github.com/sreeharin/url-shortner/internal/utils"
 )
@@ -23,6 +25,16 @@ func (h *Handler) ShortenURL(c *gin.Context) {
 		return
 	}
 
+	if !strings.HasPrefix(input.Url, "http") {
+		input.Url = "http://" + input.Url
+	}
+
+	var urlDB models.URL
+	if err := h.DB.Where("original = ?", input.Url).First(&urlDB).Error; err == nil {
+		c.JSON(http.StatusOK, urlDB)
+		return
+	}
+
 	converted := utils.ConvertURL(input.Url)
 
 	if err := h.DB.Create(&converted).Error; err != nil {
@@ -30,6 +42,7 @@ func (h *Handler) ShortenURL(c *gin.Context) {
 		return
 	}
 
+	metrics.URLShortenRequests.Inc()
 	c.JSON(http.StatusCreated, converted)
 }
 
@@ -48,5 +61,6 @@ func (h *Handler) RedirectURL(c *gin.Context) {
 		return
 	}
 
+	metrics.URLRedirectRequests.WithLabelValues(url).Inc()
 	c.Redirect(http.StatusMovedPermanently, urlDB.Original)
 }

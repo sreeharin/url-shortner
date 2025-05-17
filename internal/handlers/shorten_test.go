@@ -55,12 +55,25 @@ func TestShortenURL(t *testing.T) {
 
 		if urlDB.Shortened != convertedURL.Shortened {
 			t.Errorf("Expected shortened URL in DB: %s, got: %s", convertedURL.Shortened, urlDB.Shortened)
-	}
+		}
 
 		if !strings.HasPrefix(urlDB.Original, "http://") {
 			t.Errorf("Expected original URL to start with http://, got: %s", urlDB.Original)
 		}
 
+	})
+
+	// If the URL alreadys exists in the DB
+	// it should return the shortened code along with http 200 status code
+	t.Run("TestDBInsertionTwice", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		req, _ := http.NewRequest("POST", "/", bytes.NewBuffer(inputJson))
+
+		router.ServeHTTP(w, req)
+
+		if w.Code != http.StatusOK {
+			t.Errorf("Expected status code: %d, got: %d", http.StatusOK, w.Code)
+		}
 	})
 
 }

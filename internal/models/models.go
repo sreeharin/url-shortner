@@ -4,7 +4,7 @@ import "gorm.io/gorm"
 
 type URL struct {
 	*gorm.Model `json:"-"`
-	Original    string `json:"original"`
+	Original    string `json:"original" gorm:"unique"`
 	Shortened   string `json:"shortened"`
 }
 
