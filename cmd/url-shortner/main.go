@@ -10,6 +10,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/sreeharin/url-shortner/internal/handlers"
+	"github.com/sreeharin/url-shortner/internal/metrics"
 	"github.com/sreeharin/url-shortner/internal/middleware"
 	"github.com/sreeharin/url-shortner/internal/models"
 )
@@ -31,6 +32,8 @@ func main() {
 	router := gin.New()
 	router.Use(gin.Recovery())
 	router.Use(middleware.Logger(logger))
+
+	metrics.Register()
 
 	router.POST("/", middleware.Auth(), handler.ShortenURL)
 	router.GET("/:url", handler.RedirectURL)
