@@ -15,14 +15,14 @@ func ConvertURL(original string) models.URL {
 	}
 	converted.Original = original
 
-	LIMIT := 6
+	// LIMIT := 6
 	encoded := base62.EncodeToString([]byte(original))
 
-	if len(encoded) > LIMIT {
-		converted.Shortened = encoded[len(encoded)-LIMIT:]
-	} else {
-		converted.Shortened = encoded
-	}
+	// if len(encoded) > LIMIT {
+	// 	converted.Shortened = encoded[len(encoded)-LIMIT:]
+	// } else {
+	converted.Shortened = encoded
+	// }
 
 	return converted
 }

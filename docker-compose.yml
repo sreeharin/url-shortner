@@ -26,3 +26,8 @@ services:
       - 9090:9090
     volumes:
     - ./prometheus:/etc/prometheus
+
+  grafana:
+    image: grafana/grafana-enterprise
+    ports:
+      - 3000:3000
