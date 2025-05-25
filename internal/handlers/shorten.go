@@ -8,7 +8,6 @@ import (
 
 	"github.com/sreeharin/url-shortner/internal/metrics"
 	"github.com/sreeharin/url-shortner/internal/models"
-	"github.com/sreeharin/url-shortner/internal/utils"
 )
 
 type formInput struct {
@@ -35,15 +34,17 @@ func (h *Handler) ShortenURL(c *gin.Context) {
 		return
 	}
 
-	converted := utils.ConvertURL(input.Url)
+	url := models.URL{
+		Original: input.Url,
+	}
 
-	if err := h.DB.Create(&converted).Error; err != nil {
+	if err := h.DB.Create(&url).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to insert data"})
 		return
 	}
 
 	metrics.URLShortenRequests.Inc()
-	c.JSON(http.StatusCreated, converted)
+	c.JSON(http.StatusCreated, url)
 }
 
 // RedirectURL handles the redirection from the shortened URL to the original URL.

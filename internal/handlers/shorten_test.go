@@ -12,11 +12,11 @@ import (
 	"github.com/sreeharin/url-shortner/internal/utils"
 )
 
-func validateShortenURL(t *testing.T, want, got string) {
+func validateShortenURL(t *testing.T, url, want, got string) {
 	t.Helper()
 
 	if want != got {
-		t.Errorf("Failed to shorten URL. Want :%s Got :%s", want, got)
+		t.Errorf("Failed to shorten URL %s. Want :%s Got :%s", url, want, got)
 	}
 
 }
@@ -40,25 +40,25 @@ func TestShortenURL(t *testing.T) {
 	}{
 		{
 			original:   "example.com",
-			want:       utils.ConvertURL("example.com").Shortened,
+			want:       utils.ConvertID(1),
 			statusCode: http.StatusCreated,
 		},
 
 		// Adding http:// prefix should also produce the same shortened code of example.com
 		{
 			original:   "http://example.com",
-			want:       utils.ConvertURL("example.com").Shortened,
+			want:       utils.ConvertID(1),
 			statusCode: http.StatusOK,
 		},
 
 		{
 			original:   "http://google.com",
-			want:       utils.ConvertURL("http://google.com").Shortened,
+			want:       utils.ConvertID(2),
 			statusCode: http.StatusCreated,
 		},
 		{
 			original:   "http://amazon.com/login",
-			want:       utils.ConvertURL("http://amazon.com").Shortened,
+			want:       utils.ConvertID(3),
 			statusCode: http.StatusCreated,
 		},
 	}
@@ -77,7 +77,7 @@ func TestShortenURL(t *testing.T) {
 		var url models.URL
 		json.Unmarshal(w.Body.Bytes(), &url)
 
-		validateShortenURL(t, testCase.want, url.Shortened)
+		validateShortenURL(t, testCase.original, testCase.want, url.Shortened)
 	}
 
 }
@@ -87,13 +87,11 @@ func TestRedirectURL(t *testing.T) {
 	handler := Handler{DB: DB}
 
 	router.GET("/:url", handler.RedirectURL)
-	convertedURL := utils.ConvertURL("example.com")
-
-	DB.Create(&convertedURL)
 
 	t.Run("TestParamValid", func(t *testing.T) {
+		DB.Create(&models.URL{Original: "http://www.google.com"})
 		w := httptest.NewRecorder()
-		req, _ := http.NewRequest("GET", fmt.Sprintf("/%s", convertedURL.Shortened), nil)
+		req, _ := http.NewRequest("GET", fmt.Sprintf("/%s", utils.ConvertID(1)), nil)
 
 		router.ServeHTTP(w, req)
 
@@ -101,8 +99,8 @@ func TestRedirectURL(t *testing.T) {
 			t.Errorf("Expected status code: %d, got: %d", http.StatusMovedPermanently, w.Code)
 		}
 
-		if w.Header().Get("Location") != convertedURL.Original {
-			t.Errorf("Expected Location header: %s, got: %s", convertedURL.Original, w.Header().Get("Location"))
+		if w.Header().Get("Location") != "http://www.google.com" {
+			t.Errorf("Expected Location header: %s, got: %s", "http://www.google.com", w.Header().Get("Location"))
 		}
 	})
 
