@@ -19,7 +19,6 @@ type User struct {
 
 func (url *URL) AfterCreate(tx *gorm.DB) (err error) {
 	shortened := utils.ConvertID(url.ID)
-	url.Shortened = shortened
 	err = tx.Model(url).Update("Shortened", shortened).Error
 	return
 }

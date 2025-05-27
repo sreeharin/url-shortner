@@ -35,8 +35,7 @@ func main() {
 
 	metrics.Register()
 
-	// router.POST("/", middleware.Auth(), handler.ShortenURL)
-	router.POST("/", handler.ShortenURL)
+	router.POST("/", middleware.Auth(), handler.ShortenURL)
 	router.GET("/:url", handler.RedirectURL)
 	router.POST("/login", handler.Login)
 	router.POST("/register", handler.Registration)
