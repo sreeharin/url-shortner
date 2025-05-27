@@ -7,5 +7,5 @@
 - [x] Unit testing
 - [x] Logging
 - [x] Authentication
-- [ ] Analytics using Grafana
+- [x] Analytics using Grafana
 - [ ] Deploy using K8s

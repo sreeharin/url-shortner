@@ -2,11 +2,12 @@ package handlers
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/sreeharin/url-shortner/internal/metrics"
 	"github.com/sreeharin/url-shortner/internal/models"
-	"github.com/sreeharin/url-shortner/internal/utils"
 )
 
 type formInput struct {
@@ -23,14 +24,27 @@ func (h *Handler) ShortenURL(c *gin.Context) {
 		return
 	}
 
-	converted := utils.ConvertURL(input.Url)
+	if !strings.HasPrefix(input.Url, "http") {
+		input.Url = "http://" + input.Url
+	}
 
-	if err := h.DB.Create(&converted).Error; err != nil {
+	var urlDB models.URL
+	if err := h.DB.Where("original = ?", input.Url).First(&urlDB).Error; err == nil {
+		c.JSON(http.StatusOK, urlDB)
+		return
+	}
+
+	url := models.URL{
+		Original: input.Url,
+	}
+
+	if err := h.DB.Create(&url).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to insert data"})
 		return
 	}
 
-	c.JSON(http.StatusCreated, converted)
+	metrics.URLShortenRequests.Inc()
+	c.JSON(http.StatusCreated, url)
 }
 
 // RedirectURL handles the redirection from the shortened URL to the original URL.
@@ -48,5 +62,6 @@ func (h *Handler) RedirectURL(c *gin.Context) {
 		return
 	}
 
+	metrics.URLRedirectRequests.WithLabelValues(url).Inc()
 	c.Redirect(http.StatusMovedPermanently, urlDB.Original)
 }
