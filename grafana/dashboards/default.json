@@ -89,7 +89,7 @@
     },
     {
       "datasource": {
-        "uid": "aemzzktqfg0zkd"
+        "uid": "prometheus"
       },
       "fieldConfig": {
         "defaults": {
